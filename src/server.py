@@ -1022,7 +1022,7 @@ def ollama_chat(p, messages, tools=None, json_mode=False, schema=None):
         body["tools"] = tools
     elif json_mode:
         body["format"] = schema if isinstance(schema, dict) else "json"
-    hdr = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "cg-archiq/1.0"}
+    hdr = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "dochub/1.0"}
     key = _prov_key(p)
     if key:
         hdr["Authorization"] = "Bearer " + key
@@ -1093,7 +1093,7 @@ def openai_chat(p, messages, tools=None, json_mode=False, schema=None):
         body["tool_choice"] = "auto"
     elif json_mode and p.get("json"):
         body["response_format"] = {"type": "json_object"}
-    hdr = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "cg-archiq/1.0"}
+    hdr = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "dochub/1.0"}
     key = _prov_key(p)
     if key:
         hdr["api-key" if p.get("authHeader") == "api-key" else "Authorization"] = key if p.get("authHeader") == "api-key" else "Bearer " + key
@@ -1193,7 +1193,7 @@ class McpClient:
             self.p = subprocess.Popen([str(c.get("command", ""))] + [str(a) for a in c.get("args", [])], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env)
             self.timer = threading.Timer(AI_TIMEOUT, self.p.kill)
             self.timer.start()
-        self.rpc("initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "cg-archiq", "version": "1.0"}})
+        self.rpc("initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "dochub", "version": "1.0"}})
         self.note("notifications/initialized")
 
     def _send(self, obj):
@@ -1520,7 +1520,7 @@ def provider_models(pid):
     p = next((x for x in load_providers()[0] if x["id"] == pid), None)
     if not p:
         raise AIError(404, "Provider not found")
-    hdr = {"Accept": "application/json", "User-Agent": "cg-archiq/1.0"}
+    hdr = {"Accept": "application/json", "User-Agent": "dochub/1.0"}
     key = _prov_key(p)
     if key:
         hdr["api-key" if p.get("authHeader") == "api-key" else "Authorization"] = key if p.get("authHeader") == "api-key" else "Bearer " + key
@@ -1657,7 +1657,7 @@ def mcp_convert(path: Path, timeout=180):
                 return msg["result"]
 
     try:
-        send({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "cg-archiq", "version": "1.0"}}})
+        send({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "dochub", "version": "1.0"}}})
         wait_for(1)
         send({"jsonrpc": "2.0", "method": "notifications/initialized"})
         send({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "convert_to_markdown", "arguments": {"uri": path.resolve().as_uri()}}})
@@ -1902,7 +1902,7 @@ def conn_hosts(ids):
 def fetch_page(url, timeout=12, limit=200000):
     """GET one public https page. Returns (status, final_url, text)."""
     import urllib.request, urllib.error
-    req = urllib.request.Request(url, headers={"User-Agent": "cg-archiq/1.0", "Accept": "text/html,*/*"})
+    req = urllib.request.Request(url, headers={"User-Agent": "dochub/1.0", "Accept": "text/html,*/*"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.geturl(), r.read(limit).decode("utf-8", "replace")
@@ -1969,7 +1969,7 @@ def mcp_probe(c, timeout=45):
                         if "error" in m:
                             raise RuntimeError(m["error"].get("message", "MCP error"))
                         return m["result"]
-            send({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "cg-archiq", "version": "1.0"}}})
+            send({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "dochub", "version": "1.0"}}})
             wait_for(1)
             send({"jsonrpc": "2.0", "method": "notifications/initialized"})
             send({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
@@ -2003,7 +2003,7 @@ def mcp_probe(c, timeout=45):
                         raise RuntimeError(m["error"].get("message", "MCP error"))
                     return m["result"]
         raise RuntimeError("no answer from the server")
-    sid, raw = post({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "cg-archiq", "version": "1.0"}}})
+    sid, raw = post({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "dochub", "version": "1.0"}}})
     parse(raw)
     try:
         post({"jsonrpc": "2.0", "method": "notifications/initialized"}, sid)
@@ -2820,7 +2820,7 @@ class Handler(BaseHTTPRequestHandler):
             import urllib.request
             url = "https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js"
             try:
-                req = urllib.request.Request(url, headers={"User-Agent": "cg-archiq/1.0"})
+                req = urllib.request.Request(url, headers={"User-Agent": "dochub/1.0"})
                 with urllib.request.urlopen(req, timeout=90) as r:
                     data = r.read(8 * 1024 * 1024)
             except Exception as exc:
