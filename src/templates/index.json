@@ -1,0 +1,28 @@
+{
+  "templates": [
+    {
+      "id": "standard-prd-template",
+      "name": "Standard PRD Template",
+      "type": "prd"
+    },
+    {
+      "id": "agile-prd-template",
+      "name": "Agile PRD Template",
+      "type": "prd"
+    },
+    {
+      "id": "agile-solution-architecture-design-tem",
+      "name": "Agile Solution Architecture Design Template",
+      "type": "architecture"
+    },
+    {
+      "id": "standard-solution-architecture-design-",
+      "name": "Standard Solution Architecture Design Template",
+      "type": "architecture"
+    }
+  ],
+  "defaults": {
+    "prd": "agile-prd-template",
+    "architecture": "agile-solution-architecture-design-tem"
+  }
+}

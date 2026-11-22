@@ -1,0 +1,36 @@
+{
+  "providers": [
+    {
+      "id": "ollama-local",
+      "kind": "openai",
+      "name": "Qwen on Ollama",
+      "baseUrl": "http://127.0.0.1:11434/v1",
+      "model": "qwen3",
+      "tools": true,
+      "json": true,
+      "numCtx": 32768,
+      "apiKeyEnv": "",
+      "tokenParam": "max_tokens",
+      "authHeader": "Authorization",
+      "maxTokens": 0,
+      "temperature": null
+    },
+    {
+      "id": "openai",
+      "kind": "openai",
+      "name": "OpenAI",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4.1",
+      "tools": true,
+      "json": true,
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "tokenParam": "max_completion_tokens",
+      "authHeader": "Authorization",
+      "maxTokens": 0,
+      "temperature": null
+    }
+  ],
+  "steps": {
+    "*": "claude-cli"
+  }
+}
