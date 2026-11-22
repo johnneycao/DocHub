@@ -2,7 +2,7 @@
 
 From Requirements to Architecture Design
 
-Turns PRD files into requirements, scenarios, a test plan, payload analysis, an architecture design and a build plan, with AI steps you can stop and roll back.
+Turns source requirements documents — team meeting notes, PRDs, specs, and other Word, PDF, PowerPoint, Excel or Markdown files — into one consolidated PRD, then requirements and scenarios, a test plan, payload analysis, an architecture design and a build plan, with AI steps you can stop and roll back.
 
 ## Quick start
 

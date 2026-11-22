@@ -113,7 +113,7 @@ flowchart LR
 
 ## 4. Data model
 
-One design is one JSON object (`design.json`, or an entry in `localStorage['prd-demo-designs-v1']`).
+One design is one JSON object (`design.json`, or an entry in `localStorage['dochub-designs-v1']`).
 
 | Field | Content |
 | --- | --- |
@@ -168,7 +168,7 @@ One design is one JSON object (`design.json`, or an entry in `localStorage['prd-
 - **Folder = design name:** the project id is the folder name. `folder_from_name` makes it file-system safe (`/` and `:` to ` - `, `\ * ? " < > |` and control characters to `-`, spaces tidied, no leading or trailing dot or space, no leading `~$`, at most 80 characters, reserved names such as `CON` and `Forms` get ` design`); the result maps to itself, so the server accepts only ids that equal their own `folder_from_name`. Names are unique case-insensitively: `POST /api/designs {name}` creates the folder (409 when taken), `POST .../rename {name}` renames the folder, rewrites `id`, `name` and the source links in `design.json`, and is refused with 409 for a name in use; `PUT /api/designs/<id>` never creates a folder. At start (and after the data folder changes) `migrate_design_folders` renames folders that still have a generated id to the design name (a duplicate becomes `<name> (2)`). A folder renamed outside the tool shows under its new name. Percent-encoded ids in URLs are decoded once in `_split`.
 - **Revision check:** every `design.json` carries `rev`, `savedBy`, `savedAt`. `PUT /api/designs/<id>` is refused with 409 when the file's `rev` differs from the one sent (unless `X-Force: 1`); the server caches `(mtime, rev)` to avoid re-reading; writes are atomic (temp file, then replace). The client serialises saves so each carries the revision of the previous one.
 - **Damaged file:** `read_design_file` repairs a `design.json` that has extra characters after the JSON (keeps `design.json.damaged-<time>`, writes the valid part back); an unreadable file is listed with `damaged: true` and its error instead of being skipped, and opening it returns 422.
-- **Lock:** `<project>/.archiq-lock.json` `{session, user, since, beat}` written by `PUT .../lock`, renewed every 60 s, stale after 150 s, released on close; another session gets 409 (read-only mode, or `takeOver`). Read-only mode blocks saves, file writes and AI.
+- **Lock:** `<project>/.dochub-lock.json` `{session, user, since, beat}` written by `PUT .../lock`, renewed every 60 s, stale after 150 s, released on close; another session gets 409 (read-only mode, or `takeOver`). Read-only mode blocks saves, file writes and AI.
 - **Change capture:** `GET .../meta` (revision, author, time) and `.../tree` (file times) polled every 30 s while the design is open and the tab visible; banners for a newer revision and for changed `.md`, `.xlsx`, `.csv` files (own writes are ignored through the times the server returned). OneDrive's own version history covers who and when for every file.
 - **Activity log:** `<project>/_activity.jsonl`, one JSON line per event (`opened-for-editing`, `lock-taken-over`, `saved` at most every 5 minutes, `closed`, `ai` with step and model). `GET .../activity` returns the last 200.
 - **Versions:** `D.versions` (PRD) and `D.archVersions` (design) keep up to 500 labelled snapshots with their text and also write `versions/<time>-<label>.md`.
@@ -266,7 +266,7 @@ Every `/api/ai/*` call accepts `connections` (ids) and returns `model` (the one 
 
 - **Look:** Hallmark skill, modern-minimal, theme Cobalt, app scope. Light by default. `tokens.css`, `base.css`, `app.css`.
 - **Shell:** motto and title on one row with the storage note and theme icons; design bar (All designs, name, History, and for a local data folder Export folder, Sync from folder, Save all to folder, plus Clear generated pages) with panels under it for the export folder and the history; stage tabs (each shows what its stage produced); page; sticky bottom bar.
-- **Panels:** title on the left, notes and buttons on the right, collapse chevron last; a button row inside a panel body sits on the right with its note on the left. Every panel collapses, including the Designs page and the design-bar panels; "Collapse all sections" per page; state kept in `localStorage['prd-demo-panels-collapsed']` (the cross check shares one state on all pages).
+- **Panels:** title on the left, notes and buttons on the right, collapse chevron last; a button row inside a panel body sits on the right with its note on the left. Every panel collapses, including the Designs page and the design-bar panels; "Collapse all sections" per page; state kept in `localStorage['dochub-panels-collapsed']` (the cross check shares one state on all pages).
 - **Lists:** a table directly inside a panel scrolls in a fixed-height box (about 60 to 70% of the window) with a sticky header; the scenario table uses most of the window height; "Full height" for long lists. Pages use the full width.
 - **Master and detail:** test plan and payload library show the list on the left and the selected item on the right, both panels the same height and scrolling inside.
 - **Find in text:** `enhanceFinders` adds a search bar (`mdFindBuild`) above `#prd-editor`, `#arch-editor`, every `.doc` preview and every code block of 12 or more lines; previews wrap matches in `mark.fh`, in editors the text sits on a transparent textarea over a hidden copy (`.mdmirror`) that paints every match, kept in step on scroll, resize and typing; the current match is also selected and scrolled to (measured with the copy) while the search box keeps focus.
@@ -278,7 +278,7 @@ Every `/api/ai/*` call accepts `connections` (ids) and returns `model` (the one 
 - **Accessibility:** tab roles and `aria-selected`, labelled icon buttons, `aria-expanded`, visible focus, reduced motion, text status next to icons.
 
 ### Themes
-- `data-accent` on `<html>`: cobalt, rust, forest, violet, teal, derived with `oklch()`. `data-mode` light or dark; first visit follows the system. Stored in `localStorage['prd-demo-theme']`. Diagrams use CSS variables, so they follow.
+- `data-accent` on `<html>`: cobalt, rust, forest, violet, teal, derived with `oklch()`. `data-mode` light or dark; first visit follows the system. Stored in `localStorage['dochub-theme']`. Diagrams use CSS variables, so they follow.
 
 ## 9. Cross check and readiness
 
@@ -430,7 +430,6 @@ Every `/api/ai/*` call accepts `connections` (ids) and returns `model` (the one 
 - `.foundry.env`, `providers.json` and `~/.dochub/connection-secrets.json` hold keys and tokens in plain text (owner-only).
 - Reading documentation websites with the Claude CLI relies on its web tools; they may be unavailable on some providers, in which case an MCP connection is the fallback.
 - Rule-based leftovers and unbuilt features are listed in the backlog (section 17).
-- Storage keys and folder names still say `prd-demo` from the first version.
 
 ## 17. Backlog (future phases)
 
@@ -479,7 +478,7 @@ Everything that is a stand-in, a leftover or not built is listed here. Nothing i
 | B-31 | Run `tests/e2e.py` in a browser and add tests for providers, connections, project references, Find solutions, manual options, fix options, Markdown sources, shared folder and build plan | 1 |
 | B-32 | Verify the Mermaid diagrams render | 1 |
 | B-33 | Split `app.js` into modules per page | 2 |
-| B-34 | Rename the storage keys and folder names that still say `prd-demo`, with a migration for saved designs | 2 |
+| B-34 | Rename storage keys and lock filenames to `dochub-*` (done; no migration for fresh publish) | ✓ |
 
 **Decisions needed (only if the hosted design is revived):** Azure subscription and region and the IT owner; one SharePoint site or one per business area; first Admins; internet-facing with Conditional Access or private network; breadth of delegated SharePoint permission; who may restore old versions; who owns the rules and prompts; the success measures for the POV.
 

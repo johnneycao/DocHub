@@ -2048,7 +2048,7 @@ def folder_rel(rel):
 SETTINGS_DIR = Path.home() / ".dochub"
 SETTINGS_FILE = SETTINGS_DIR / "settings.json"
 SYNC_HINT = re.compile(r"onedrive|cloudstorage", re.I)
-LOCK_NAME = ".archiq-lock.json"
+LOCK_NAME = ".dochub-lock.json"
 LOCK_FRESH = 150  # seconds without a heartbeat before a lock counts as stale
 ACT_NAME = "_activity.jsonl"
 _REV = {}  # design id -> (mtime_ns, rev) of the file as this process last wrote or read it
@@ -2218,7 +2218,7 @@ def use_instance(path):
     if not d.exists() and not d.parent.is_dir():  # only the last folder is created: a missing OneDrive folder means OneDrive is not running
         raise ValueError("The folder was not found: %s (is OneDrive running and signed in?)" % d)
     d.mkdir(exist_ok=True)
-    probe = d / ".archiq-write-test"
+    probe = d / ".dochub-write-test"
     try:
         probe.write_text("ok", "utf-8"); probe.unlink()
     except Exception:

@@ -35,7 +35,7 @@ const fmtSize = (b) => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(0)
 const TEXTY = /\.(md|txt|csv|json|html?)$/i;
 
 /* ---------- storage: helper service folder when it runs, otherwise this browser ---------- */
-const LS = 'prd-demo-designs-v1';
+const LS = 'dochub-designs-v1';
 let memStore = {};
 const lsRead = () => { try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch (e) { return memStore; } };
 const lsWrite = (o) => { memStore = o; try { localStorage.setItem(LS, JSON.stringify(o)); } catch (e) { toast('This browser blocked saving. Designs stay until you close the page.'); } };
@@ -486,7 +486,7 @@ function ccBody(r, arch) {
   const rows = shown.map(({ x, i }) => `<tr class="row-${ccSev(x).toLowerCase()}"><td><span class="chip sev sev-${ccSev(x).toLowerCase()}">${ccSev(x)}</span></td><td>${x.type}</td><td class="mono">${esc(x.where)}</td><td>${esc(x.text)}</td><td><div class="row-actions">${arch ? `<button class="key small" data-ccuse="${i}" type="button">Use in prompt</button>` : ''}<button class="key small" data-ccdis="${i}" type="button" aria-label="Dismiss this finding">Dismiss</button></div></td></tr>`).join('');
   return head + (live.length ? (shown.length ? `<div class="table-wrap"><table><thead><tr><th>Severity</th><th>Type</th><th>Where</th><th>Finding</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="panel-body"><p class="note">No findings match these filters.</p></div>') : '');
 }
-const CC_LS = 'prd-demo-cc-collapsed';
+const CC_LS = 'dochub-cc-collapsed';
 const ccCollapsed = () => pcLoad().has('cross-check');
 const CHEV = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function ccSummary(r) {
@@ -3344,7 +3344,7 @@ const mermaidKind = (src) => { const t = String(src).replace(/^\s*(?:%%[^\n]*\n|
 const diagram = (src) => { const k = mermaidKind(src); return k === 'er' ? renderEr2(parseEr2(src)) : k === 'other' ? `<div class="dv-wait" data-mmd="${ea(encodeURIComponent(src))}">Drawing with Mermaid...</div>` : renderFlow(src); };
 
 /* ---------- colour theme and night mode ---------- */
-const THEME_LS = 'prd-demo-theme', ICON_MOON = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><path d="M16.5 11.6A6.8 6.8 0 0 1 8.4 3.5a6.8 6.8 0 1 0 8.1 8.1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>', ICON_SUN = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+const THEME_LS = 'dochub-theme', ICON_MOON = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><path d="M16.5 11.6A6.8 6.8 0 0 1 8.4 3.5a6.8 6.8 0 1 0 8.1 8.1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>', ICON_SUN = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 const ACCENTS = ['cobalt', 'rust', 'forest', 'violet', 'teal'];
 function themeState() { const d = document.documentElement; return { accent: d.getAttribute('data-accent') || 'cobalt', mode: d.getAttribute('data-mode') || 'light' }; }
 function applyTheme(t, save) {
@@ -3881,7 +3881,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ---------- collapsible panels: every panel with a heading can be folded, so long pages are easy to scroll ---------- */
-const PC_LS = 'prd-demo-panels-collapsed';
+const PC_LS = 'dochub-panels-collapsed';
 let pcSet = null;
 const pcLoad = () => { if (!pcSet) { try { pcSet = new Set(JSON.parse(localStorage.getItem(PC_LS) || '[]')); } catch (e) { pcSet = new Set(); } } return pcSet; };
 const pcSave = () => { try { localStorage.setItem(PC_LS, JSON.stringify([...pcLoad()].slice(-300))); } catch (e) { /* not saved */ } };
