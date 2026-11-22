@@ -211,10 +211,10 @@ function r1() {
     <div class="panel-head"><h3>Source files</h3><div class="row-actions"><span class="note">Read-only: originals are never edited.</span><button class="key small" data-act="add-files" type="button">Add files</button><button class="key small" data-act="conv-all" type="button">Convert all</button></div></div>
     ${srcs}
     <div class="coverage">${esc(engineNote())}${store.mode === 'server' && !store.markitdown ? ` <button class="key small" data-act="install-md" type="button"${st.mdInstalling ? ' disabled' : ''}>${st.mdInstalling ? 'Installing...' : 'Install MarkItDown'}</button>` : ''}${st.mdInstalling ? ' <span class="note">This takes one to two minutes. Do not close the window.</span>' : ''}${st.mdInstallMsg ? ` <span class="note">${esc(st.mdInstallMsg)}</span>` : ''}</div>
-    ${viewing ? `<div class="panel${vmode('src') === 'md' ? ' dark' : ''}"><div class="panel-head"><span class="mono">${esc(viewing.name)}${isMdName(viewing.name) ? '' : '.md'}</span><div class="row-actions"><span class="note">${isMdName(viewing.name) ? 'Original Markdown' : 'Converted Markdown'}, read-only</span>${vmTabs('src')}</div></div>${vmBody('src', viewing.md)}</div>` : ''}
+    ${viewing ? `<div class="panel${vmode('src') === 'md' ? ' dark' : ''}"><div class="panel-head"><span class="mono">${esc(viewing.name)}${isMdName(viewing.name) ? '' : '.md'}</span><div class="row-actions"><span class="note">${isMdName(viewing.name) ? 'Original Markdown' : 'Converted Markdown'}, read-only</span>${vmTabs('src', viewing.md, viewing.name, viewing.name)}</div></div>${vmBody('src', viewing.md)}</div>` : ''}
   </div>
   <div class="panel">
-    <div class="panel-head"><h3>Consolidated PRD</h3><div class="row-actions">${tplSelectHtml('prd')}<button class="key small" id="merge-btn" data-act="merge" type="button">${st.confirmMerge ? 'Replace the PRD below?' : 'Generate PRD'}</button><div class="subtabs" id="prd-view" role="group" aria-label="View"><button type="button" data-pv="md" aria-pressed="${st.pview === 'md'}">Markdown</button><button type="button" data-pv="doc" aria-pressed="${st.pview === 'doc'}">Preview</button></div></div></div>
+    <div class="panel-head"><h3>Consolidated PRD</h3><div class="row-actions">${tplSelectHtml('prd')}<button class="key small" id="merge-btn" data-act="merge" type="button">${st.confirmMerge ? 'Replace the PRD below?' : 'Generate PRD'}</button><div class="subtabs" id="prd-view" role="group" aria-label="View"><button type="button" data-pv="md" aria-pressed="${st.pview === 'md'}">Markdown</button><button type="button" class="key small" data-prd-full onclick="event.stopPropagation(); mdFull(getCurrentPRD(), 'Consolidated PRD'); return false;" aria-label="Open preview in full screen" title="Open preview in full screen">Preview</button></div></div></div>
     ${prdGenHtml()}
     <div class="panel-body"><div class="row-actions"><button class="key small" data-act="copy-prd" type="button">Copy</button><button class="key small" data-act="paste-prd" type="button">Paste from clipboard</button><button class="key small" data-act="undo-prd" type="button" ${st.undo === null ? 'disabled data-off="1"' : ''}>Undo replace</button><button class="key small" data-act="import-prd" type="button">Import .md</button><span class="note" id="save-note">${esc(storeNote())}</span></div></div>
     ${editor}
@@ -1119,6 +1119,32 @@ function dvFull(src) {
   m.addEventListener('click', (e) => { if (e.target === m) dvClose(); });
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dvModal) dvClose(); });
+
+/* ---------- Markdown preview full-screen modal ---------- */
+let mdModal = null;
+function mdClose() { if (mdModal) { mdModal.remove(); mdModal = null; document.body.classList.remove('dv-lock'); } }
+function mdFull(md, title) {
+  mdClose();
+  const m = document.createElement('div'); m.className = 'md-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', 'Markdown preview');
+  const preview = document.createElement('div'); preview.className = 'md-preview';
+  preview.innerHTML = `<div class="md-preview-head"><h3>${esc(title || 'Preview')}</h3><button class="md-preview-close" type="button" aria-label="Close preview"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div><div class="md-preview-body"><div class="doc">${String(md).trim() ? renderMd(md) : '<p class="note">Nothing to preview.</p>'}</div></div>`;
+  m.appendChild(preview); document.body.appendChild(m); document.body.classList.add('dv-lock'); mdModal = m;
+  preview.querySelector('.md-preview-close').addEventListener('click', mdClose);
+  m.addEventListener('click', (e) => { if (e.target === m) mdClose(); });
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mdModal) mdClose(); });
+
+// Expose globally for onclick handlers
+window.mdFull = mdFull;
+window.mdClose = mdClose;
+
+// Global accessors for current design state
+window.getCurrentPRD = () => (D && D.prd) || '';
+window.getCurrentArchMd = () => (D && D.archMd) || '';
+window.getCurrentSourceMd = (name) => {
+  const s = D?.sources?.find((x) => x.name === name);
+  return s?.md || '';
+};
 function enhanceDiagrams(root) {
   (root || document).querySelectorAll('.diagram:not(.dv)').forEach((box) => {
     if (box.querySelector('.dv-wait[data-mmd]') && !box.dataset.mm) { dvMermaidOnly(box, false); return; }
@@ -1841,9 +1867,9 @@ function frontMatterHtml(text) {
   if (!rows.length) return '';
   return `<details class="docprops"><summary>Document properties (${rows.length})</summary><div class="table-wrap"><table><tbody>${rows.map((r) => `<tr><th>${esc(r.k)}</th><td>${esc(r.v || 'TBD')}</td></tr>`).join('')}</tbody></table></div></details>`;
 }
-/* read-only Markdown viewers (source files, baseline draft): Preview is the default, Markdown shows the text */
-const vmode = (k) => (st.vm && st.vm[k]) || 'doc';
-const vmTabs = (k) => `<div class="subtabs" role="group" aria-label="View"><button type="button" data-vm="${k}:md" aria-pressed="${vmode(k) === 'md'}">Markdown</button><button type="button" data-vm="${k}:doc" aria-pressed="${vmode(k) === 'doc'}">Preview</button></div>`;
+/* read-only Markdown viewers (source files, baseline draft): Markdown is the default, Preview opens full-screen */
+const vmode = (k) => (st.vm && st.vm[k]) || 'md';
+const vmTabs = (k, md, title, identifier) => `<div class="subtabs" role="group" aria-label="View"><button type="button" data-vm="${k}:md" aria-pressed="${vmode(k) === 'md'}">Markdown</button><button type="button" class="key small" data-md-full="${ea(identifier || title)}" onclick="event.stopPropagation(); mdFull('${esc(String(md || '').replace(/'/g, "\\'"))}', '${esc(String(title || '').replace(/'/g, "\\'"))}'); return false;" aria-label="Open preview in full screen" title="Open preview in full screen">Preview</button></div>`;
 const vmBody = (k, md) => vmode(k) === 'md' ? `<pre class="code">${esc(md)}</pre>` : `<div class="doc">${String(md).trim() ? renderMd(md) : '<p class="note">Nothing to preview.</p>'}</div>`;
 function renderMd(md) {
   let fmHtml = ''; md = String(md || '');
@@ -1957,7 +1983,7 @@ function drawArch() {
   const w = $('#arch-wrap'), ev = evidence(), md = D.archMd || '';
   const editor = st.archView === 'md' ? `<textarea id="arch-editor" class="editor" spellcheck="false" aria-label="Architecture design in Markdown">${esc(md)}</textarea>` : `<div class="doc">${md.trim() ? renderMd(md) : '<p class="note">Nothing to preview yet.</p>'}</div>`;
   w.innerHTML = `${archRefsPanel()}${archReadyPanel()}${ev ? `<div class="panel">${checkHead(ev)}${ev.checks.map(fRow).join('')}</tbody></table></div></div>` : ''}
-  <div class="panel"><div class="panel-head"><h3>Architecture design</h3><div class="subtabs" role="group" aria-label="View"><button type="button" data-av="md" aria-pressed="${st.archView === 'md'}">Markdown</button><button type="button" data-av="doc" aria-pressed="${st.archView === 'doc'}">Preview</button></div></div><div class="panel-body">${archToolbar()}</div>${editor}<div class="coverage">Edit here, or export the Markdown, edit it in another tool and paste it back. Diagrams are drawn from the mermaid blocks.</div></div>
+  <div class="panel"><div class="panel-head"><h3>Architecture design</h3><div class="subtabs" role="group" aria-label="View"><button type="button" data-av="md" aria-pressed="${st.archView === 'md'}">Markdown</button><button type="button" class="key small" data-arch-full onclick="event.stopPropagation(); mdFull(getCurrentArchMd(), 'Architecture design'); return false;" aria-label="Open preview in full screen" title="Open preview in full screen">Preview</button></div></div><div class="panel-body">${archToolbar()}</div>${editor}<div class="coverage">Edit here, or export the Markdown, edit it in another tool and paste it back. Diagrams are drawn from the mermaid blocks.</div></div>
   ${archReviewPanel()}${archPromptPanel()}${archVersionsPanel()}`;
   $$('#arch-wrap .rowin').forEach((e) => e.classList.remove('rowin'));
   setBusy();
@@ -2318,7 +2344,7 @@ function archBasePanel() {
   const b = D.archBase;
   const act = b ? `<button class="key small" data-act="base-view" type="button">${st.baseView ? 'Hide' : 'View'}</button><button class="key small" data-act="base-remove" type="button">Remove</button>` : '';
   const body = b ? `<div class="table-wrap"><table><thead><tr><th>Draft</th><th>Size</th><th>Added</th></tr></thead><tbody><tr><td>${esc(b.name)}${b.from && b.from !== 'pasted' ? `<div class="note">from ${esc(b.from)}</div>` : ''}</td><td class="num">${Math.round(b.size / 1024) || 1} KB</td><td>${esc(fmtDate(b.at))}</td></tr></tbody></table></div>` : '<div class="panel-body"><p class="note">No draft (optional). The AI then uses the other documents.</p></div>';
-  return `<div class="panel"><div class="panel-head"><h3>Baseline architecture draft (optional)</h3><div class="row-actions"><span class="note">Read-only. The AI uses it as the base for the check, solutions and design.</span>${act}<button class="key small" data-act="base-paste" type="button">Paste from clipboard</button><button class="key small" data-act="base-add" type="button">${b ? 'Replace draft' : 'Import draft'}</button></div></div>${body}${b && st.baseView ? `<div class="panel${vmode('base') === 'md' ? ' dark' : ''}"><div class="panel-head"><span class="mono">${esc(b.name)}</span><div class="row-actions"><span class="note">Read-only</span>${vmTabs('base')}</div></div>${vmBody('base', b.md)}</div>` : ''}</div>`;
+  return `<div class="panel"><div class="panel-head"><h3>Baseline architecture draft (optional)</h3><div class="row-actions"><span class="note">Read-only. The AI uses it as the base for the check, solutions and design.</span>${act}<button class="key small" data-act="base-paste" type="button">Paste from clipboard</button><button class="key small" data-act="base-add" type="button">${b ? 'Replace draft' : 'Import draft'}</button></div></div>${body}${b && st.baseView ? `<div class="panel${vmode('base') === 'md' ? ' dark' : ''}"><div class="panel-head"><span class="mono">${esc(b.name)}</span><div class="row-actions"><span class="note">Read-only</span>${vmTabs('base', b.md, b.name, b.name)}</div></div>${vmBody('base', b.md)}</div>` : ''}</div>`;
 }
 function archRefsPanel() {
   if (CONNS === null && !connLoading) { connLoading = true; loadConns().then(() => { connLoading = false; if (current === 6 && D) r6orDraw(); }); }
@@ -3736,6 +3762,14 @@ document.addEventListener('click', async (e) => {
   if (d.rv) { st.repView = d.rv; return renderImported(); }
   if (d.pv) { st.pview = d.pv; return r1(); }
   if (d.vm) { const [k, m] = d.vm.split(':'); (st.vm = st.vm || {})[k] = m; return k === 'src' ? r1() : r6orDraw(); }
+  if (d.mdFull) {
+    const src = D.sources?.find((s) => s.name === d.mdFull);
+    const base = D.archBase && D.archBase.name === d.mdFull ? D.archBase : null;
+    const md = src?.md || base?.md || '';
+    mdFull(md, d.mdFull); return;
+  }
+  if (d.archFull) { mdFull(D.archMd || '', 'Architecture design'); return; }
+  if (d.prdFull) { mdFull(D.prd || '', 'Consolidated PRD'); return; }
   if (d.vcmp) { st.cmp = st.cmp === d.vcmp ? '' : d.vcmp; return r1(); }
   if (d.avcmp) { st.acmp = st.acmp === d.avcmp ? '' : d.avcmp; return drawArch(); }
   if (d.avrestore) { const v = (D.archVersions || []).find((x) => x.id === d.avrestore); if (v) { snapArch('Before restore'); st.archUndo = D.archMd == null ? '' : D.archMd; D.archMd = v.md; st.arch = true; st.archDirty = true; snapArch('Restored the version from ' + fmtDate(v.t)); flush(); drawTabs(); drawArch(); toast('Version restored. Undo is available.'); } return; }
