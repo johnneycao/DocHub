@@ -9,9 +9,6 @@ set "PORT=8765"
 set "PYTHONUTF8=1"
 echo DocHub - From Requirements to Architecture Design
 
-rem ---- Settings saved under the previous product name: moved once, the old folder is kept ----
-if exist "%USERPROFILE%\.cg-archiq" if not exist "%USERPROFILE%\.dochub" call :migrate
-
 rem ---- Python 3.10 or newer ----
 set "PY="
 py -3 -c "import sys; sys.exit(0 if sys.version_info>=(3,10) else 1)" >nul 2>&1 && set "PY=py -3"
@@ -91,18 +88,4 @@ if not defined MODEL set "MODEL=claude-sonnet-4-5"
 > "%CONF%" echo ANTHROPIC_FOUNDRY_RESOURCE=%RES%
 >> "%CONF%" echo ANTHROPIC_FOUNDRY_API_KEY=%KEY%
 >> "%CONF%" echo ANTHROPIC_DEFAULT_SONNET_MODEL=%MODEL%
-exit /b 0
-
-:migrate
-rem Copy-Item rather than Move-Item: the old folder stays, so a failed start loses nothing.
-rem Copied into a temporary folder and renamed only on success, so a copy that fails partway
-rem never leaves a half-filled .dochub behind to stop the check above from retrying later.
-powershell -NoProfile -Command "$s = '%USERPROFILE%\.cg-archiq'; $t = '%USERPROFILE%\.dochub.tmp'; $d = '%USERPROFILE%\.dochub'; if ((Test-Path $s) -and -not (Test-Path $d)) { Remove-Item $t -Recurse -Force -ErrorAction SilentlyContinue; try { Copy-Item $s $t -Recurse -ErrorAction Stop; Rename-Item $t $d -ErrorAction Stop } catch { Remove-Item $t -Recurse -Force -ErrorAction SilentlyContinue; exit 1 } }"
-if errorlevel 1 goto migrate_failed
-echo Moved your settings from %USERPROFILE%\.cg-archiq to %USERPROFILE%\.dochub (the old folder is kept).
-exit /b 0
-
-:migrate_failed
-rem Reached only when the copy or the rename failed; .dochub.tmp is already cleaned up above.
-echo Could not move your settings from %USERPROFILE%\.cg-archiq; the old folder is untouched and the move is tried again next time.
 exit /b 0

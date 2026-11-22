@@ -7,20 +7,6 @@ CONF=".foundry.env"
 
 echo "DocHub - From Requirements to Architecture Design"
 
-# One-time move of settings saved under the previous product name; the old folder is kept.
-# Copied into a temporary folder and renamed on success, so a copy that fails partway leaves
-# no half-filled ~/.dochub behind: the check above then retries on the next start.
-if [ -d "$HOME/.cg-archiq" ] && [ ! -d "$HOME/.dochub" ]; then
-  OLD="$HOME/.cg-archiq"; NEW="$HOME/.dochub"; TMP="$HOME/.dochub.tmp"
-  rm -rf "$TMP"
-  if cp -r "$OLD" "$TMP" && mv "$TMP" "$NEW"; then
-    echo "Moved your settings from ~/.cg-archiq to ~/.dochub (the old folder is kept)."
-  else
-    rm -rf "$TMP"
-    echo "Could not move your settings from ~/.cg-archiq; the old folder is untouched and the move is retried next time."
-  fi
-fi
-
 ask() {
   echo "First-time setup: Claude on Microsoft Foundry"
   echo "(Azure portal > your Foundry resource > Endpoints and keys)"
